@@ -24,10 +24,12 @@ def setup_argparse():
     parser = argparse.ArgumentParser(description="Robo Finder")
     parser.add_argument("--debug", action="store_true", default=False, help="enable debugging mode.")
     parser.add_argument('--url', '-u', dest='url', type=str, help='Give me the URL', required=True)
-    parser.add_argument('--output', '-o', dest='output', type=str, help='output file path.' ,required=False)
+    parser.add_argument('--output', '-o', dest='output',default='', type=str, help='output file path.' ,required=False)
     parser.add_argument('--threads', '-t', dest='threads', default=10, type=int, help='number of threads to use.')
     parser.add_argument('-extract-path',action="store_true", default=False, help='Extract path separately and save it to $domain-path.txt .')
     parser.add_argument('-extract-params',action="store_true", default=False, help='Extract params separately and save it to $domain-params.txt .')
+    parser.add_argument('-parse-url', '-utp', dest='utp', type=str, help='number of urls to parse.')
+    parser.add_argument('-silent',action="store_true", default=False, help='stdout or not.')
     return parser.parse_args()
 
 def extract(response):
@@ -71,11 +73,22 @@ def get_all_links(args) -> list:
 
     logger(args.debug, "Got the data as JSON objects.")
     logger(args.debug, "Requests count : {}".format(len(url_list)))
+    
+    if(len(url_list) > 500):
+        logger(True, f"Requests count {len(url_list)} , it is recommended to set -utp number")
+
+    
     if "https://web.archive.org/web/timestampif_/original" in url_list:
         url_list.remove("https://web.archive.org/web/timestampif_/original")
     if len(url_list) == 0:
         logger(args.debug, "No robots.txt files found in the archive. Exiting...")
         exit(1)
+    
+    # How many URLs parse ( for site that has more than 2k results )
+    if(args.utp != None):
+        print(f"Requests count {len(url_list)} , processing {args.utp} URLs...")
+        return url_list[:int(args.utp)]
+    
     return url_list
 
 # Define thread_local to prevent session confclits
@@ -199,8 +212,12 @@ def main():
         domain = urlparse(args.url).netloc
         with open(f'{domain}-path.txt','w') as f:
             for i in path:
-                f.write(i.strip())
-                f.write('\n')
+                try:
+                    f.write(i.strip())
+                    f.write('\n')
+                except Exception as e:
+                    print(f"Error {e}")
+                    continue
         logger(args.debug, "Writing the path output to {} done.".format(args.output))
         
     # Extract and save params in $domain-params.txt 
@@ -209,8 +226,12 @@ def main():
         domain = urlparse(args.url).netloc
         with open(f'{domain}-params.txt','w') as f:
             for i in params:
-                f.write(i.strip())
-                f.write('\n')
+                try:
+                    f.write(i.strip())
+                    f.write('\n')
+                except Exception as e:
+                    print(f"Error {e}")
+                    continue
                 
         logger(args.debug, "Writing the params output to {} done.".format(args.output))
     
@@ -218,11 +239,22 @@ def main():
     if args.output != '':
         with open(args.output,'w') as f:
             for i in concatinated_path:
-                f.write(i.strip())
-                f.write('\n')
+                try:
+                    f.write(i.strip())
+                    f.write('\n')
+                except Exception as e:
+                    print(f"Error {e}")
+                    continue
         logger(args.debug, "Writing the output to {} done.".format(args.output))
-    for i in concatinated_path:
-        print(i)
+    if (args.silent == False):
+        for i in concatinated_path:
+            print(i)
 
 if __name__ == "__main__":
     main()
+
+
+
+
+# Todo
+# Handle big request count ( split to smaller )
