@@ -51,19 +51,24 @@ def extract(response):
 
     # Extract params
     extract_params_pattern = r"^\?([^=\n]*)|(?<=[?&])\w+(?==)|&([^=\n]*)"
-    params_tuple = re.findall(extract_params_pattern, clean)
+    matched_params = re.finditer(extract_params_pattern, clean ,re.MULTILINE)
+    params_list=[]
+    
+    for matchNum, match in enumerate(matched_params, start=1):
+        params_list.append(match.group())
+    
+    # Remove special chars from begining of params 
+    remove_special_chars_pattern = r'^[.&/\\()\[\]]+|\?'
+    # params = re.sub(remove_special_chars_pattern, "", '\n'.join(params_list) , re.MULTILINE)
+    params_list = [re.sub(remove_special_chars_pattern, "", element , re.MULTILINE) for element in params_list]
 
+    
     # Extract path
     extract_path_pattern = r"^\/.*"
-    path = re.findall(extract_path_pattern, clean, re.MULTILINE)
+    path_list = re.findall(extract_path_pattern, clean, re.MULTILINE)
     
-    # Remove empty tuples
-    new_tuples = tuple(item for item in params_tuple if item != ('', ''))
-    params=[]
-    for tup in new_tuples:
-        params.append(tup[1])
     
-    return params, path
+    return params_list, path_list
 
 
 def get_all_links(args) -> list:
@@ -258,7 +263,6 @@ def main():
 
 if __name__ == "__main__":
     main()
-
 
 
 
