@@ -67,18 +67,18 @@ def extract(response):
 
 
 def get_all_links(args) -> list:
-    logger(args.debug, "Sending an HTTP request to the archive to obtain all paths for robots.txt files.")
+    logger(args.debug, "Sending an HTTP request to the archive to obtain all paths for robots.txt files." , Logger_type.DEBUG)
     try:
         obj = requests.get("https://web.archive.org/cdx/search/cdx?url={}/robots.txt&output=json&fl=timestamp,original&filter=statuscode:200&collapse=digest".format(args.url)).json()
     except:
-        logger(args.debug, "Failed to obtain data from the archive. Exiting...")
+        logger(args.debug, "Failed to obtain data from the archive. Exiting...",Logger_type.DEBUG)
         exit(1)
     url_list = []
     for i in obj:
         url_list.append("https://web.archive.org/web/{}if_/{}".format(i[0],i[1]))
 
-    logger(args.debug, "Got the data as JSON objects.")
-    logger(args.debug, "Requests count : {}".format(len(url_list)))
+    logger(args.debug, "Got the data as JSON objects.",Logger_type.DEBUG)
+    logger(args.debug, "Requests count : {}".format(len(url_list)),Logger_type.DEBUG)
     
     if(len(url_list) > 500):
         logger(True, f"Requests count {len(url_list)} , it is recommended to set -utp number" , Logger_type.INFO)
@@ -87,7 +87,7 @@ def get_all_links(args) -> list:
     if "https://web.archive.org/web/timestampif_/original" in url_list:
         url_list.remove("https://web.archive.org/web/timestampif_/original")
     if len(url_list) == 0:
-        logger(args.debug, "No robots.txt files found in the archive. Exiting...")
+        logger(args.debug, "No robots.txt files found in the archive. Exiting...",Logger_type.DEBUG)
         exit(1)
     
     # How many URLs parse ( for site that has more than 2k results )
@@ -118,7 +118,7 @@ def concatinate(args,results) -> list:
             elif validators.url(i) == True:
                 concatinated.append(i)
     except Exception as e:
-        logger(args.debug, "Error occurred while concatinating paths. {}".format(e))
+        logger(args.debug, "Error occurred while concatinating paths. {}".format(e),Logger_type.ERROR)
 
     return concatinated
            
@@ -130,7 +130,7 @@ def fetchFiles(url:str):
     while retry_count < max_retries:
         try:
             response =  session.get(url)
-            logger(args.debug, "HTTP Request Sent to {}".format(url))
+            logger(args.debug, "HTTP Request Sent to {}".format(url),Logger_type.DEBUG)
             break
 
         except requests.exceptions.SSLError:
@@ -164,14 +164,14 @@ def handle_sigint(signal_number, stack_frame):
 def startProccess(urls,args) -> list:
     signal.signal(signal.SIGINT, handle_sigint)
     responses = []
-    logger(args.debug, "Sending a bunch of HTTP requests to fetch all robots.txt files.")
+    logger(args.debug, "Sending a bunch of HTTP requests to fetch all robots.txt files.",Logger_type.DEBUG)
     try:
         with ThreadPoolExecutor(max_workers=args.threads) as executor:
             for resp in executor.map(fetchFiles,urls):
                 if resp != "":
                     responses.append(resp.text)
     except KeyboardInterrupt:
-        logger(args.debug,"Keyboard interrupt detected, stopping processing.")
+        logger(args.debug,"Keyboard interrupt detected, stopping processing.",Logger_type.DEBUG)
         exit(1)
     return responses
 
@@ -180,7 +180,7 @@ args = setup_argparse()
 
 def main():
     start = time.time()
-    logger(args.debug, "Starting the program.")
+    logger(args.debug, "Starting the program.",Logger_type.DEBUG)
     
     # Extract all old robots.txt URLs  
     url_list = get_all_links(args)
@@ -190,9 +190,9 @@ def main():
     
     params = []
     path = []
-    logger(args.debug, "Extracting all paths from robots.txt files.")
+    logger(args.debug, "Extracting all paths from robots.txt files.",Logger_type.DEBUG)
     end = time.time()
-    logger(args.debug, "Time taken : {} seconds".format(end-start))
+    logger(args.debug, "Time taken : {} seconds".format(end-start),Logger_type.DEBUG)
     for content in contents:
         params_array , path_array = extract(content)
         params = params + params_array
@@ -205,16 +205,16 @@ def main():
     
     
     if len(path) == 0:
-        logger(args.debug, "No paths found. Exiting...")
+        logger(args.debug, "No paths found. Exiting...",Logger_type.DEBUG)
         exit(1)
     
     # Concatinate path with URL -> https://target.com/path
-    logger(args.debug, "Concatinating paths with the site url.")
+    logger(args.debug, "Concatinating paths with the site url.",Logger_type.DEBUG)
     concatinated_path = concatinate(args,path)
     
     # Extract and save path in $domain-path.txt 
     if args.extract_path == True:
-        logger(args.debug, "Save path separately to $domain-path.txt .")
+        logger(args.debug, "Save path separately to $domain-path.txt .",Logger_type.DEBUG)
         domain = urlparse(args.url).netloc
         with open(f'{domain}-path.txt','w') as f:
             for i in path:
@@ -224,11 +224,11 @@ def main():
                 except Exception as e:
                     print(f"Error {e}")
                     continue
-        logger(args.debug, "Writing the path output to {} done.".format(args.output))
+        logger(args.debug, "Writing the path output to {} done.".format(args.output),Logger_type.DEBUG)
         
     # Extract and save params in $domain-params.txt 
     if args.extract_params == True:
-        logger(args.debug, "Save params separately to $domain-params.txt .")
+        logger(args.debug, "Save params separately to $domain-params.txt .",Logger_type.DEBUG)
         domain = urlparse(args.url).netloc
         with open(f'{domain}-params.txt','w') as f:
             for i in params:
@@ -239,9 +239,9 @@ def main():
                     print(f"Error {e}")
                     continue
                 
-        logger(args.debug, "Writing the params output to {} done.".format(args.output))
+        logger(args.debug, "Writing the params output to {} done.".format(args.output),Logger_type.DEBUG)
     
-    logger(args.debug, "Total number of paths found : {}".format(len(path)))
+    logger(args.debug, "Total number of paths found : {}".format(len(path)),Logger_type.DEBUG)
     if args.output != '':
         with open(args.output,'w') as f:
             for i in concatinated_path:
@@ -251,7 +251,7 @@ def main():
                 except Exception as e:
                     print(f"Error {e}")
                     continue
-        logger(args.debug, "Writing the output to {} done.".format(args.output))
+        logger(args.debug, "Writing the output to {} done.".format(args.output),Logger_type.DEBUG)
     if (args.silent == False):
         for i in concatinated_path:
             print(i)
