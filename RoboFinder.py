@@ -71,7 +71,7 @@ def get_all_links(args) -> list:
     try:
         obj = requests.get("https://web.archive.org/cdx/search/cdx?url={}/robots.txt&output=json&fl=timestamp,original&filter=statuscode:200&collapse=digest".format(args.url)).json()
     except:
-        logger(args.debug, "Failed to obtain data from the archive. Exiting...",Logger_type.DEBUG)
+        logger(True, "Failed to obtain data from the archive. Exiting...",Logger_type.ERROR)
         exit(1)
     url_list = []
     for i in obj:
