@@ -31,11 +31,9 @@ pip install -r requirements.txt
 - `--threads` or `-t`: Specify the number of threads to use. The default value is 10.
 - `-extract-path`: Enable path extraction and save it separately to `$domain-path.txt`.
 - `-extract-params`: Enable parameter extraction and save it separately to `$domain-params.txt`.
-- `-parse-url`: When number of robots.txt are more than 2000 it's better to process less URL`.
-- `-silent`: There is no stdout`.
+- `-parse-url`: When number of robots.txt are more than 2000 it\'s better to process less URL`.
+- `-silent`: There isn\'t stdout`.
 
-    parser.add_argument('-parse-url', '-utp', dest='utp', type=str, help='number of urls to parse.')
-    parser.add_argument('-silent',action="store_true", default=False, help='stdout or not.')
 
 ```
 
