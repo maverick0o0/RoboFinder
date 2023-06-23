@@ -10,15 +10,21 @@ class colors:
     BLUE = '\033[94m'
     CYAN = '\033[96m'
     GREEN = '\033[92m'
-    WARNING = '\033[93m'
+    WARNING_COLOR = '\033[93m'
     ERROR = '\033[91m'
     ENDC = '\033[0m'
 
-def logger(debug, message):
+class Logger_type:
+    ERROR = 'Error'
+    DEBUG = 'Debug'
+    INFO = 'Info'
+
+
+def logger(debug, message ,logger_type):
     current_time = datetime.datetime.now()
     formatted_time = current_time.strftime("%H:%M:%S")
     if debug == True:
-        print(colors.CYAN + "[" + colors.WARNING + "debug" + colors.CYAN + "][" + colors.ENDC + formatted_time + colors.CYAN + "] " + colors.ENDC + message)
+        print(colors.CYAN + "[" + colors.WARNING_COLOR + logger_type + colors.CYAN + "][" + colors.ENDC + formatted_time + colors.CYAN + "] " + colors.ENDC + message)
 
 def setup_argparse():
     parser = argparse.ArgumentParser(description="Robo Finder")
@@ -75,7 +81,7 @@ def get_all_links(args) -> list:
     logger(args.debug, "Requests count : {}".format(len(url_list)))
     
     if(len(url_list) > 500):
-        logger(True, f"Requests count {len(url_list)} , it is recommended to set -utp number")
+        logger(True, f"Requests count {len(url_list)} , it is recommended to set -utp number" , Logger_type.INFO)
 
     
     if "https://web.archive.org/web/timestampif_/original" in url_list:
@@ -129,24 +135,24 @@ def fetchFiles(url:str):
 
         except requests.exceptions.SSLError:
             time.sleep(1)
-            logger(args.debug, "Sending request again to {}".format(url))
+            logger(True, "Sending request again to {}".format(url) , Logger_type.ERROR)
             retry_count += 1
         except requests.exceptions.ConnectTimeout:
-            logger(args.debug, "Connecttion Timeout occurred. Retrying in 1 second...")
+            logger(True, "Connecttion Timeout occurred. Retrying in 1 second..." ,Logger_type.ERROR)
             time.sleep(1)
-            logger(args.debug, "Sending request again to {}".format(url))
+            logger(True, "Sending request again to {}".format(url) , Logger_type.INFO)
             retry_count += 1
 
         except requests.exceptions.ConnectionError:
-            logger(args.debug, "ConnectionError occurred. Retrying in 1 second...")
+            logger(True, "ConnectionError occurred. Retrying in 1 second..." ,Logger_type.ERROR)
             time.sleep(1)
-            logger(args.debug, "Sending request again to {}".format(url))
+            logger(True, "Sending request again to {}".format(url),Logger_type.INFO)
             retry_count += 1
 
         except requests.exceptions.ChunkedEncodingError:
-            logger(args.debug, "ChunkedEncodingError occurred. Retrying in 5 seconds...")
+            logger(True, "ChunkedEncodingError occurred. Retrying in 5 seconds..." ,Logger_type.ERROR)
             time.sleep(5)
-            logger(args.debug, "Sending request again to {}".format(url))
+            logger(True, "Sending request again to {}".format(url),Logger_type.INFO)
             retry_count += 1
 
     return response
